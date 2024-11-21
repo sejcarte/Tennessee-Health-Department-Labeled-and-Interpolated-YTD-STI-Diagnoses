@@ -1,0 +1,912 @@
+---
+title: "STI_Final"
+output: html_document
+date: "2024-10-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+#Uploading Tennessee State Time Series Data
+
+install.packages('readr')
+library(readr)
+TennesseeStateTimeSeriesYTDDiffOneDrop_Sheet1_ <- read_csv("Downloads/TennesseeStateTimeSeriesYTDDiffOneDrop(Sheet1).csv")
+
+#Uploading Health Region Time Series Data
+
+library(readr)
+View(TennesseeStateTimeSeriesYTDDiffOneDrop_Sheet1_)
+YTDDifferenceRegionYear_Sheet1_ <- read_csv("Downloads/YTDDifferenceRegionYear(Sheet1).csv")
+View(YTDDifferenceRegionYear_Sheet1_)
+
+TennesseeTotalSTIYTDDiffOneDrop <- as.data.frame(TennesseeStateTimeSeriesYTDDiffOneDrop_Sheet1_)
+
+install.packages('ggplot2')
+library(ggplot2)
+
+TennesseeTotalSTIYTDDiffOneDrop$`Week of Year` <- TennesseeTotalSTIYTDDiffOneDrop$WeekOfYear
+
+ggplot(data = TennesseeTotalSTIYTDDiffOneDrop, aes(x = `Week of Year`, y = Gonorrhea)) +
+geom_line() +
+facet_wrap(facets = vars(Year))
+
+ggplot(data = TennesseeTotalSTIYTDDiffOneDrop, aes(x = `Week of Year`, y = HIV)) +
+geom_line() +
+facet_wrap(facets = vars(Year))
+
+ggplot(data = TennesseeTotalSTIYTDDiffOneDrop, aes(x = `Week of Year`, y = Syphilis)) +
+geom_line() +
+facet_wrap(facets = vars(Year))
+
+ggplot(data = TennesseeTotalSTIYTDDiffOneDrop, aes(x = `Week of Year`, y = Chlamydia)) +
+geom_line() +
+facet_wrap(facets = vars(Year))
+
+install.packages('zoo')
+library(zoo)
+
+install.packages('strucchange')
+library(strucchange)
+
+install.packages('ggfortify')
+library(ggfortify)
+
+# Generating Cumulative Sums
+
+TennesseeTotalSTIYTDDiffOneDrop$ChlamydiaCumulative <- cumsum(TennesseeTotalSTIYTDDiffOneDrop$Chlamydia)
+
+TennesseeTotalSTIYTDDiffOneDrop$GonorrheaCumulative <- cumsum(TennesseeTotalSTIYTDDiffOneDrop$Gonorrhea)
+
+TennesseeTotalSTIYTDDiffOneDrop$SyphilisCumulative <- cumsum(TennesseeTotalSTIYTDDiffOneDrop$Syphilis)
+
+TennesseeTotalSTIYTDDiffOneDrop$HIVCumulative <- cumsum(TennesseeTotalSTIYTDDiffOneDrop$HIV)
+
+TennesseeTotalSTIYTDDiffOneDrop$TotalSTICumulative <- cumsum(TennesseeTotalSTIYTDDiffOneDrop$TotalSTI)
+
+TennesseeTotalSTIYTDDiffOneDrop$ChlamydiaCumulative <- NULL
+
+TennesseeTotalSTIYTDDiffOneDrop$GonorrheaCumulative <- NULL
+
+TennesseeTotalSTIYTDDiffOneDrop$SyphilisCumulative <- NULL
+
+TennesseeTotalSTIYTDDiffOneDrop$HIVCumulative <- NULL
+
+TennesseeTotalSTIYTDDiffOneDrop$TotalSTICumulative <- NULL
+
+
+#Plotting Cumulative Sums of STI Across Weeks for Tennessee
+
+TennesseeTimeSeries <- TennesseeTotalSTIYTDDiffOneDrop
+
+TennesseeTimeSeries$ChlamydiaCusum <- cumsum(TennesseeTimeSeries$Chlamydia - mean(TennesseeTimeSeries$Chlamydia))
+
+View(TennesseeTimeSeries)
+
+TennesseeTimeSeries$GonorrheaCusum <- cumsum(TennesseeTimeSeries$Gonorrhea - mean(TennesseeTimeSeries$Gonorrhea))
+
+TennesseeTimeSeries$SyphilisCusum <- cumsum(TennesseeTimeSeries$Syphilis - mean(TennesseeTimeSeries$Syphilis))
+
+TennesseeTimeSeries$HIVCusum <- cumsum(TennesseeTimeSeries$HIV - mean(TennesseeTimeSeries$HIV))
+
+TennesseeTimeSeries$TotalSTICusum <- cumsum(TennesseeTimeSeries$TotalSTI - mean(TennesseeTimeSeries$TotalSTI))
+
+#Cumulative Sum Plot
+
+ChlamydiaCusum <- ts(TennesseeTimeSeries$ChlamydiaCusum, start = 1)
+
+autoplot(ChlamydiaCusum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Chlamydia Cumulative Sum", x = "Week", y = "Weekly Cases")
+
+#Moving Sum Calculations and Plotting
+
+ChlamydiaMosom = rollapply(TennesseeTimeSeries$Chlamydia - mean(TennesseeTimeSeries$Chlamydia), 15, sum)
+
+GonorrheaMosom = rollapply(TennesseeTimeSeries$Gonorrhea - mean(TennesseeTimeSeries$Gonorrhea), 15, sum)
+
+HIVMosom = rollapply(TennesseeTimeSeries$HIV - mean(TennesseeTimeSeries$HIV), 15, sum)
+
+SyphilisMosom = rollapply(TennesseeTimeSeries$Syphilis - mean(TennesseeTimeSeries$Syphilis), 15, sum)
+
+TotalSTIMosom = rollapply(TennesseeTimeSeries$TotalSTI - mean(TennesseeTimeSeries$TotalSTI), 15, sum)
+
+ChlamydiaMosum <- ChlamydiaMosom
+GonorrheaMosum <- GonorrheaMosom
+SyphilisMosum <- SyphilisMosom
+HIVMosum <- HIVMosom
+TotalSTIMosum <- TotalSTIMosom
+
+rm(ChlamydiaMosom)
+rm(GonorrheaMosom)
+rm(SyphilisMosom)
+rm(HIVMosom)
+rm(TotalSTIMosom)
+
+
+ChlamydiaMosum <- ts(ChlamydiaMosum, start = 1)
+GonorrheaMosum <- ts(GonorrheaMosum, start = 1)
+SyphilisMosum <- ts(SyphilisMosum, start = 1)
+HIVMosum <- ts(HIVMosum, start = 1)
+TotalSTIMosum <- ts(TotalSTIMosum, start = 1)
+
+autoplot(ChlamydiaMosum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Chlamydia Moving Sum", x = "Week", y = "Weekly Cases")
+autoplot(GonorrheaMosum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Gonorrhea Moving Sum", x = "Week", y = "Weekly Cases")
+autoplot(SyphilisMosum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Syphilis Moving Sum", x = "Week", y = "Weekly Cases")
+autoplot(HIVMosum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee HIV Moving Sum", x = "Week", y = "Weekly Cases")
+autoplot(TotalSTIMosum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Total STI Moving Sum", x = "Week", y = "Weekly Cases")
+
+
+#Cumulative Sum Calculations and Plotting
+
+GonorrheaCusum <- ts(TennesseeTimeSeries$GonorrheaCusum, start = 1)
+SyphilisCusum <- ts(TennesseeTimeSeries$SyphilisCusum, start = 1)
+HIVCusum <- ts(TennesseeTimeSeries$HIVCusum, start = 1)
+TotalSTICusum <- ts(TennesseeTimeSeries$TotalSTICusum, start = 1)
+
+autoplot(GonorrheaCusum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Gonorrhea Cumulative Sum", x = "Week", y = "Weekly Cases")
+autoplot(SyphilisCusum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Syphilis Cumulative Sum", x = "Week", y = "Weekly Cases")
+autoplot(HIVCusum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee HIV Cumulative Sum", x = "Week", y = "Weekly Cases")
+autoplot(TotalSTICusum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Total STI Cumulative Sum", x = "Week", y = "Weekly Cases")
+TotalSTICusum <- ts(TennesseeTimeSeries$TotalSTICusum, start = 1)
+autoplot(TotalSTICusum) + geom_hline(yintercept = 0, color = "blue") + labs(title="Tennessee Total STI Cumulative Sum", x = "Week", y = "Weekly Cases")
+
+#Recursive Cumulative Sum Calculation Hmmm....
+
+ChlamydiaTS <- ts(TennesseeTimeSeries$Chlamydia, start = TennesseeTimeSeries$Week[1], frequency=1)
+
+start_week = time(ChlamydiaTS)[1]
+
+Chlamydia_Rec_Cusum <- numeric(length(ChlamydiaTS))
+for (i in 1:length(ChlamydiaTS)){Chlamydia_Rec_Cusum[i] = mean(ChlamydiaTS[1:(i-1)])}
+
+Chlamydia_Rec_Cusum <- ts(Chlamydia_Rec_Cusum, start = start_week, frequency = 1)
+
+autoplot(Chlamydia_Rec_Cusum) + labs(title = "Tennessee Chlamydia Recursive Cumulative Sum", x = "Week", y = "Weekly Cases")
+
+
+##Chlamydia OCUS, OMOS, RCUS, RMOS Calculations
+
+ChlamydiaOCUS <- efp(ChlamydiaTS ~ 1, type = "OLS-CUSUM")
+plot(ChlamydiaOCUS)
+
+ChlamydiaOMOS <- efp(ChlamydiaTS ~ 1, type = "OLS-MOSUM")
+plot(ChlamydiaOMOS)
+
+ChlamydiaRCUS <- efp(ChlamydiaTS ~ 1, type = "Rec-CUSUM")
+plot(ChlamydiaRCUS)
+
+ChlamydiaRMOS <- efp(ChlamydiaTS ~ 1, type = "Rec-MOSUM")
+plot(ChlamydiaRMOS)
+
+
+##Gonorrhea OCUS, OMOS, RCUS, RMOS Calculations
+
+GonorrheaOCUS <- efp(GonorrheaTS ~ 1, type = "OLS-CUSUM")
+plot(GonorrheaOCUS)
+
+GonorrheaOMOS <- efp(GonorrheaTS ~ 1, type = "OLS-MOSUM")
+plot(GonorrheaOMOS)
+
+GonorrheaRCUS <- efp(GonorrheaTS ~ 1, type = "Rec-CUSUM")
+plot(GonorrheaRCUS)
+
+GonorrheaRMOS <- efp(GonorrheaTS ~ 1, type = "Rec-MOSUM")
+plot(GonorrheaRMOS)
+
+##Syphilis OCUS, OMOS, RCUS, RMOS Calculations
+
+SyphilisOCUS <- efp(SyphilisTS ~ 1, type = "OLS-CUSUM")
+plot(SyphilisOCUS)
+
+SyphilisOMOS <- efp(SyphilisTS ~ 1, type = "OLS-MOSUM")
+plot(SyphilisOMOS)
+
+SyphilisRCUS <- efp(SyphilisTS ~ 1, type = "Rec-CUSUM")
+plot(SyphilisRCUS)
+
+SyphilisRMOS <- efp(SyphilisTS ~ 1, type = "Rec-MOSUM")
+plot(SyphilisRMOS)
+
+##HIV OCUS, OMOS, RCUS, RMOS Calculations
+
+HIVOCUS <- efp(HIVTS ~ 1, type = "OLS-CUSUM")
+plot(HIVOCUS)
+
+HIVOMOS <- efp(HIVTS ~ 1, type = "OLS-MOSUM")
+plot(HIVOMOS)
+
+HIVRCUS <- efp(HIVTS ~ 1, type = "Rec-CUSUM")
+plot(HIVRCUS)
+
+HIVRMOS <- efp(HIVTS ~ 1, type = "Rec-MOSUM")
+plot(HIVRMOS)
+
+##SupF-Tests for Each STI
+
+ChlamydiaFS <- Fstats(ChlamydiaTS ~ 1, from = 0.1)
+plot(ChlamydiaFS, main = "Chlamydia SupF-Test")
+
+GonorrheaFS <- Fstats(GonorrheaTS ~ 1, from = 0.1)
+plot(GonorrheaFS, main = "Gonorrhea SupF-Test")
+
+SyphilisFS <- Fstats(SyphilisTS ~ 1, from = 0.1)
+plot(SyphilisFS, main = "Syphilis SupF-Test")
+
+HIVFS <- Fstats(HIVTS ~ 1, from = 0.1)
+plot(HIVFS, main = "HIV SupF-Test")
+
+
+
+cat("Potential Breakpoint from Chlamyida F Test at:", time(ChlamydiaTS)[ChlamydiaFS$breakpoint], "/n")
+cat("Potential Breakpoint from Gonorrhea F Test at:", time(GonorrheaTS)[GonorrheaFS$breakpoint], "/n")
+cat("Potential Breakpoint from Syphilis F Test at:", time(SyphilisTS)[SyphilisFS$breakpoint], "/n")
+cat("Potential Breakpoint from HIV F Test at:",
+time(HIVTS)[HIVFS$breakpoint], "/n")
+
+
+##Determining Breakpoints in Each Time Series
+
+ChlamydiaBP <- breakpoints(ChlamydiaTS ~ 1)
+for (i in ChlamydiaBP$breakpoints){cat("Breakpoint found at week:", time(ChlamydiaTS)[i],"\n")}
+#Output: Breakpoint found at week: 205 
+
+GonorrheaBP <- breakpoints(GonorrheaTS ~ 1)
+for (i in GonorrheaBP$breakpoints){cat("Breakpoint found at week:", time(GonorrheaTS)[i],"\n")}
+#Output: Breakpoint found at week: 132, Breakpoint found at week: 205 
+
+SyphilisBP <- breakpoints(SyphilisTS ~ 1)
+for (i in SyphilisBP$breakpoints){cat("Breakpoint found at week:", time(SyphilisTS)[i],"\n")}
+#Output: Breakpoint found at week: 171, Breakpoint found at week: 224
+
+HIVBP <- breakpoints(HIVTS ~ 1)
+for (i in HIVBP$breakpoints){cat("Breakpoint found at week:", time(HIVTS)[i],"\n")}
+#Output: Breakpoint found at week: NA (BIC minimized at 0)
+
+
+##If relying on supF Test in lieu of BIC for HIV Trend given null hypothesis rejection
+
+HIVBP_FSTAT <- breakfactor(HIVBP, breaks = 1)
+HIV_FSTAT_Reg <- lm(HIVTS ~ HIVBP_FSTAT - 1)
+plot(HIVTS, ylab="HIV Weekly Cases", xlab = "Week")
+lines(ts(predict(HIV_FSTAT_Reg), start=start_week, freq=1), col='darkgreen', lwd=2)
+HIV_FSTAT_CI <- confint(HIVBP, breaks = 1)
+lines(HIV_FSTAT_CI)
+
+cat("Potential Breakpoint from HIV F Test at:", time(HIVTS)[HIVFS$breakpoint], "/n")
+#Output = Potential Breakpoint from HIV F Test at: 165 
+
+##
+
+
+
+
+##Break factor regression estimates
+
+ChlamydiaBFAC <- breakfactor(ChlamydiaBP, breaks = length(ChlamydiaBP$breakpoints))
+
+ChlamydiaFM <- lm(ChlamydiaTS ~ ChlamydiaBFAC - 1)
+plot(ChlamydiaBP)
+
+GonorrheaBFAC <- breakfactor(GonorrheaBP, breaks = length(GonorrheaBP$breakpoints))
+
+GonorrheaFM <- lm(GonorrheaTS ~ GonorrheaBFAC - 1)
+plot(GonorrheaBP)
+
+SyphilisBFAC <- breakfactor(SyphilisBP, breaks = length(SyphilisBP$breakpoints))
+
+SyphilisFM <- lm(SyphilisTS ~ SyphilisBFAC - 1)
+plot(SyphilisBP)
+
+HIVBFAC <- breakfactor(HIVBP, breaks = length(HIVBP$breakpoints))
+
+HIVFM <- lm(HIVTS ~ HIVBFAC - 1)
+plot(HIVBP)
+
+autoplot(ChlamydiaBP)
+autoplot(GonorrheaBP)
+autoplot(SyphilisBP)
+autoplot(HIVBP)
+
+#Break Factors Selected Based on BIC Minimization with Declining RSS
+
+
+##Confidence Interval with Structural Break Calculations
+
+plot(ChlamydiaTS, ylab="Chlamydia Weekly Cases")
+lines(ts(predict(ChlamydiaFM), start=start_week, freq=1), col='darkgreen', lwd=2)
+ChlamydiaCI_TS <- confint(ChlamydiaBP)
+lines(ChlamydiaCI_TS)
+
+plot(GonorrheaTS, ylab="Gonorrhea Weekly Cases", xlab = "Week")
+lines(ts(predict(GonorrheaFM), start=start_week, freq=1), col='darkgreen', lwd=2)
+GonorrheaCI_TS <- confint(GonorrheaBP)
+lines(GonorrheaCI_TS)
+
+plot(SyphilisTS, ylab="Syphilis Weekly Cases", xlab = "Week")
+lines(ts(predict(SyphilisFM), start=start_week, freq=1), col='darkgreen', lwd=2)
+SyphilisCI_TS <- confint(SyphilisBP)
+lines(SyphilisCI_TS)
+
+plot(HIVTS, ylab="HIV Weekly Cases", xlab = "Week")
+lines(ts(predict(HIVFM), start=start_week, freq=1), col='darkgreen', lwd=2)
+
+
+#Summary Statistics/Tables
+
+summary(ChlamydiaFM)
+summary(GonorrheaFM)
+summary(SyphilisFM)
+summary(HIV_FSTAT_Reg)
+
+install.packages('stargazer')
+library(stargazer)
+
+# Quick fix for stargazer <= 5.2.3 is.na() issue with long model names in R >= 4.2
+# Unload stargazer if loaded
+detach("package:stargazer",unload=T)
+# Delete it
+remove.packages("stargazer")
+# Download the source
+download.file("https://cran.r-project.org/src/contrib/stargazer_5.2.3.tar.gz", destfile = "stargazer_5.2.3.tar.gz")
+# Unpack
+untar("stargazer_5.2.3.tar.gz")
+# Read the sourcefile with .inside.bracket fun
+stargazer_src <- readLines("stargazer/R/stargazer-internal.R")
+# Move the length check 5 lines up so it precedes is.na(.)
+stargazer_src[1990] <- stargazer_src[1995]
+stargazer_src[1995] <- ""
+# Save back
+writeLines(stargazer_src, con="stargazer/R/stargazer-internal.R")
+# Compile and install the patched package
+install.packages("stargazer", repos = NULL, type="source")
+library(stargazer)
+
+
+stargazer(ChlamydiaFM, GonorrheaFM, SyphilisFM, HIV_FSTAT_Reg, type="latex",title= "Structural Intercepts over Tennessee Time Series", dep.var.labels=c("Chlamydia", "Gonorrhea", "Syphilis", "HIV"), covariate.labels = c("Chlamydia Jan 2018 - Dec 2021", "Chlamydia December 2021 - May 2023", "Gonorrhea Jan 2018 - July 2020", "Gonorrhea July 2020 - Dec 2021", "Gonorrhea Dec 2021 - May 2023", "Syphilis Jan 2018 - Apr 2021", "Syphilis Apr 2021 - Apr 2022", "Syphilis Apr 2022 - May 2023", "HIV Jan 2018 - Mar 2021", "HIV Mar 2021 - May 2023"), out="StrucReg.tex")
+
+```
+
+```{r}
+##County Level Analyses
+
+#Uploading Tennessee County Level Annual Populations
+
+Tennessee_County_Populations_2018_2023 <- read_excel("Downloads/Tennessee_County_Populations_2018_2023.xlsx")
+
+
+install.packages('dplyr')
+library(dplyr)
+
+#Obtaining annual health region populations by adding county populations by health region and year
+
+HealthRegionAnnualPopulations <- Tennessee_County_Populations_2018_2023 %>%
+  group_by(`Year`, `Health Region`) %>%
+  summarise(Population = sum(`Population`), .groups = 'drop')
+
+#Uploading Google Mobility Data 2020-2022
+
+install.packages('readr')
+library(readr)
+
+X2020_US_Region_Mobility_Report <- read_csv("Downloads/Region_Mobility_Report_CSVs/2020_US_Region_Mobility_Report.csv")
+
+X2021_US_Region_Mobility_Report <- read_csv("Downloads/Region_Mobility_Report_CSVs/2021_US_Region_Mobility_Report.csv")
+
+X2022_US_Region_Mobility_Report <- read_csv("Downloads/Region_Mobility_Report_CSVs/2022_US_Region_Mobility_Report.csv")
+
+
+#Merging 2020-2023 Mobility Data and Cleaning for Tennessee Mobility
+
+US_Mobility_20_22 <- rbind(X2020_US_Region_Mobility_Report, X2021_US_Region_Mobility_Report, X2022_US_Region_Mobility_Report)
+
+Tenneseee_Mobility_20_22 <- subset(US_Mobility_20_22, sub_region_1 == "Tennessee")
+
+#Addressing occasional NA observations by assuming that each observation may be proxied by the average of the observation the first day before and a day after the occurrence. 
+
+install.packages('zoo')
+library(zoo)
+
+ Tenneseee_Mobility_20_22 <- Tenneseee_Mobility_20_22 %>%
+  mutate(residential_percent_change_from_baseline = na.approx(residential_percent_change_from_baseline, rule = 2))
+
+  Tenneseee_Mobility_20_22 <- Tenneseee_Mobility_20_22 %>%
+  mutate(retail_and_recreation_percent_change_from_baseline = na.approx(retail_and_recreation_percent_change_from_baseline, rule = 2))
+
+#Converting Daily to Weekly
+
+install.packages('lubridate')
+library(lubridate)
+
+#Generating Weekly 7-day average of percentage residential time change from baseline and retail/recreation percent visits change from baseline
+
+
+Weekly_Tennessee_Mobility_Residential_Recreation <- Tenneseee_Mobility_20_22 %>%
+  mutate(week = floor_date(date, "week")) %>%  # Convert date to weekly
+  group_by(sub_region_1, sub_region_2, week) %>%
+  summarise(
+    weekly_avg_percent_residential_change = mean(residential_percent_change_from_baseline, na.rm = TRUE),
+    weekly_avg_percent_retail_recreation_change = mean(retail_and_recreation_percent_change_from_baseline, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+#Cleaning County Names 
+
+Weekly_Tennessee_Mobility_Residential_Recreation$sub_region_2 <- sub(" County$", "", Weekly_Tennessee_Mobility_Residential_Recreation$sub_region_2)
+
+#Uploading STI Diagnosis Data by Week and Health Region
+
+Tennessee_STI_Diagnoses <- read_excel("Downloads/Tennessee_STI_Diagnoses.xlsx")
+
+#Appending Health Region Annual Populations to Tennessee STI Diagnoses by Year and Health Region
+
+HealthRegionAnnualPopulations$RegionYear <- paste0(HealthRegionAnnualPopulations$Year, HealthRegionAnnualPopulations$`Health Region`)
+
+#Performing a Full Join between STI diagnosis and Population dataframes
+
+Health_Region_Diagnoses_Pop <- Tennessee_STI_Diagnoses %>%
+  left_join(HealthRegionAnnualPopulations, by = "RegionYear")
+
+#Converting Weekly Tennessee Mobility Data Time Period from Data format to 'Week of Year' format
+
+Weekly_Tennessee_Mobility_Residential_Recreation$WeekofYear <- week(Weekly_Tennessee_Mobility_Residential_Recreation$week)
+
+#Appending County Annual Populations to Mobility Data to Calculate a Regional Population Weighting for Mobility Changes
+
+#First, obtaining year on the mobility data column
+
+Weekly_Tennessee_Mobility_Residential_Recreation$Year <- substr(Weekly_Tennessee_Mobility_Residential_Recreation$week, 1, 4)
+
+#Then, renaming sub_region_2 for mapping
+
+Weekly_Tennessee_Mobility_Residential_Recreation <- Weekly_Tennessee_Mobility_Residential_Recreation %>% rename(County = sub_region_2)
+
+#Converting 'Year' to Numeric Type
+
+Weekly_Tennessee_Mobility_Residential_Recreation$Year <- as.numeric(as.character(Weekly_Tennessee_Mobility_Residential_Recreation$Year))
+
+Tennessee_County_Populations_2018_2023$Year <- as.numeric(as.character(Tennessee_County_Populations_2018_2023$Year))
+
+#Performing Left Join by County and Year for Population
+
+Weekly_Tennessee_Mobility_Residential_Recreation2 <- Weekly_Tennessee_Mobility_Residential_Recreation %>%
+  left_join(Tennessee_County_Populations_2018_2023, by = c("County", "Year"))
+
+
+#Appending Health Region Population to County Data
+
+Health_Region_Diagnoses_Pop <- Health_Region_Diagnoses_Pop %>% rename(`Health Region Population` = Population)
+
+Region_Pop_Year <- Health_Region_Diagnoses_Pop %>% select(Year.x, `Health Region.x`, `Population`)
+
+Weekly_Tennessee_Mobility_Residential_Recreation3 <- Weekly_Tennessee_Mobility_Residential_Recreation2 %>%
+ full_join(Health_Region_Diagnoses_Pop %>% select(`Health Region.x`, Year, `Population`), by = c("Health Region.x", "Year"))
+
+Weekly_Tennessee_Mobility_Residential_Recreation3 <- Weekly_Tennessee_Mobility_Residential_Recreation3 %>% distinct()
+
+#Calculating Health Region Population-Weighted Mobility Changes for Each County-Week
+
+#First, dropping Tennessee as Full State observations
+
+Weekly_Tennessee_Mobility_Residential_Recreation4 <- Weekly_Tennessee_Mobility_Residential_Recreation3 %>% filter(!is.na(Weekly_Tennessee_Mobility_Residential_Recreation3$County))
+
+#Calculating Health Region Weighted Residential Mobility
+
+Weekly_Tennessee_Mobility_Residential_Recreation4$WeightedResidential <- (Weekly_Tennessee_Mobility_Residential_Recreation4$Population / Weekly_Tennessee_Mobility_Residential_Recreation4$`Health Region Population`) * Weekly_Tennessee_Mobility_Residential_Recreation4$weekly_avg_percent_residential_change
+
+HealthRegionResidentialMobility <- Weekly_Tennessee_Mobility_Residential_Recreation4 %>%
+  group_by(`week`, `Health Region`) %>%
+  summarise(Weekly_Avg_Percent_Residential_Change = sum(WeightedResidential), .groups = 'drop')
+
+#Calculating Health Region Weighted Retail/Recreation
+
+Weekly_Tennessee_Mobility_Residential_Recreation4$WeightedRetail_Rec <- (Weekly_Tennessee_Mobility_Residential_Recreation4$Population / Weekly_Tennessee_Mobility_Residential_Recreation4$`Health Region Population`) * Weekly_Tennessee_Mobility_Residential_Recreation4$weekly_avg_percent_retail_recreation_change
+
+HealthRegionRetail_Rec_Mobility <- Weekly_Tennessee_Mobility_Residential_Recreation4 %>%
+  group_by(`week`, `Health Region`) %>%
+  summarise(Weekly_Avg_Percent_Retail_Recreation_Change = sum(WeightedRetail_Rec), .groups = 'drop')
+
+
+#Transferring Health Region Mobility to STI Diagnoses Dataframe
+
+
+#Creating Common Year and Week Variables
+
+HealthRegionResidentialMobility$WeekofYear <- week(HealthRegionResidentialMobility$week)
+
+HealthRegionResidentialMobility$Year <- substr(HealthRegionResidentialMobility$week, 1, 4)
+
+HealthRegionRetail_Rec_Mobility$WeekofYear <- week(HealthRegionRetail_Rec_Mobility$week)
+
+HealthRegionRetail_Rec_Mobility$Year <- substr(HealthRegionRetail_Rec_Mobility$week, 1, 4)
+
+Tennessee_STI_Diagnoses$Year <- substr(Tennessee_STI_Diagnoses$RegionYear, 1, 4)
+
+Tennessee_STI_Diagnoses$Year <- as.numeric(as.character(Tennessee_STI_Diagnoses$Year))
+
+HealthRegionRetail_Rec_Mobility$Year <- as.numeric(as.character(HealthRegionRetail_Rec_Mobility$Year))
+
+HealthRegionResidentialMobility$Year <- as.numeric(as.character(HealthRegionResidentialMobility$Year))
+
+Tennessee_STI_Diagnoses <- Tennessee_STI_Diagnoses %>% rename(`Health Region` = Region)
+
+#Performing Left Join of Mobility by Health Region onto Regional STI Diagnoses
+
+Tennessee_STI_Diagnoses2 <- Tennessee_STI_Diagnoses %>%
+  left_join(HealthRegionRetail_Rec_Mobility %>% select(Weekly_Avg_Percent_Retail_Recreation_Change, Year, WeekofYear, `Health Region`), by = c("Year", "WeekofYear", "Health Region"))
+
+Tennessee_STI_Diagnoses3 <- Tennessee_STI_Diagnoses2 %>%
+  left_join(HealthRegionResidentialMobility %>% select(Weekly_Avg_Percent_Residential_Change, Year, WeekofYear, `Health Region`), by = c("Year", "WeekofYear", "Health Region"))
+
+#Creating "Sequential Week" Time variable across "WeekofYear" and "Year" for each region
+
+Tennessee_STI_Diagnoses4 <- Tennessee_STI_Diagnoses3 %>%
+  arrange(`Health Region`, Year, WeekofYear) %>%
+  group_by(`Health Region`) %>%
+  mutate(Sequential_Week = (Year - min(Year)) * 52 + WeekofYear) %>%
+  ungroup()
+
+
+#Limiting Panel to When Google Mobility Data is Available
+
+Diagnoses_with_Mobility <- Tennessee_STI_Diagnoses4 %>% filter(!is.na(Tennessee_STI_Diagnoses4$Weekly_Avg_Percent_Residential_Change))
+
+
+
+#Setting up Dataframe for Panel Analysis
+
+Diagnoses_with_Mobility$Sequential_Week <- Diagnoses_with_Mobility$Sequential_Week - 109
+
+Diagnoses_with_Mobility$`Health Region` <- as.factor(Diagnoses_with_Mobility$`Health Region`)
+
+#Establishing Statewide Treatment for "Stay-at-home" orders from April 3rd 2020 to April 30th 2020
+
+Diagnoses_with_Mobility$Stay_at_home_order <- ifelse((Diagnoses_with_Mobility$Sequential_Week >= 9 & Diagnoses_with_Mobility$Sequential_Week <= 13), 1, 0)
+
+install.packages("plm")
+library(plm)
+
+Diagnoses_with_Mobility <- as.data.frame(Diagnoses_with_Mobility)
+
+Diagnoses_with_Mobility <- Diagnoses_with_Mobility %>% rename(`Region` = `Health Region`)
+
+STI_panel <- pdata.frame(Diagnoses_with_Mobility, index = c("Region", "Sequential_Week"))
+
+install.packages("fixest")
+library(fixest)
+
+##IV strategy 
+
+install.packages("AER")
+library(AER)
+
+#
+
+library(fixest)
+
+# Sort data
+Diagnoses_with_Mobility <- Diagnoses_with_Mobility[order(Diagnoses_with_Mobility$Region, Diagnoses_with_Mobility$Sequential_Week), ]
+
+p_Diagnoses_with_Mobility <- panel(Diagnoses_with_Mobility, ~Region+Sequential_Week)
+
+
+
+first_stage_Res <- feols(Weekly_Avg_Percent_Residential_Change ~ Stay_at_home_order | Region + WeekofYear, cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(first_stage_Res)
+etable(first_stage_Res)
+
+
+Diagnoses_with_Mobility$predicted_Res <- predict(first_stage_Res)
+
+first_stage_Rec <- feols(Weekly_Avg_Percent_Retail_Recreation_Change ~ Stay_at_home_order | Region + WeekofYear, cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(first_stage_Rec)
+etable(first_stage_Rec)
+
+
+
+Diagnoses_with_Mobility$predicted_Rec <- predict(first_stage_Rec)
+
+p_Diagnoses_with_Mobility$predicted_Rec_Lag_4 = lag_fml(predicted_Rec ~ Region + Sequential_Week, 4, p_Diagnoses_with_Mobility)
+
+p_Diagnoses_with_Mobility$predicted_Rec_Lag_5 = lag_fml(predicted_Rec ~ Region + Sequential_Week, 5, p_Diagnoses_with_Mobility)
+
+p_Diagnoses_with_Mobility$predicted_Res_Lag_4 = lag_fml(predicted_Res ~ Region + Sequential_Week, 4, p_Diagnoses_with_Mobility)
+
+p_Diagnoses_with_Mobility$predicted_Res_Lag_5 = lag_fml(predicted_Res ~ Region + Sequential_Week, 5, p_Diagnoses_with_Mobility)
+
+#Second Stage 4 and 5 Weeks Chlamydia
+
+second_stage_Chlamydia_Res4 <- feglm(Chlamydia ~ predicted_Res_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Res4)
+
+second_stage_Chlamydia_Rec4 <- feglm(Chlamydia ~ predicted_Rec_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Rec4)
+
+second_stage_Chlamydia_Res5 <- feglm(Chlamydia ~ predicted_Res_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Res5)
+
+second_stage_Chlamydia_Rec5 <- feglm(Chlamydia ~ predicted_Rec_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Rec5)
+
+
+#Second Stage 3 and 4 Weeks Gonorrhea
+
+second_stage_Gonorrhea_Res4 <- feglm(Gonorrhea ~ predicted_Res_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Res4)
+
+second_stage_Gonorrhea_Rec4 <- feglm(Gonorrhea ~ predicted_Rec_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Rec4)
+
+second_stage_Gonorrhea_Res5 <- feglm(Gonorrhea ~ predicted_Res_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Res5)
+
+second_stage_Gonorrhea_Rec5 <- feglm(Gonorrhea ~ predicted_Rec_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Rec5)
+
+
+#Second Stage 3 and 4 Weeks Syphilis
+
+second_stage_Syphilis_Res4 <- feglm(Syphilis ~ predicted_Res_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Res4)
+
+second_stage_Syphilis_Rec4 <- feglm(Syphilis ~ predicted_Rec_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Rec4)
+
+second_stage_Syphilis_Res5 <- feglm(Syphilis ~ predicted_Res_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Res5)
+
+second_stage_Syphilis_Rec5 <- feglm(Syphilis ~ predicted_Rec_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Rec5)
+
+#Second Stage 3 and 4 Weeks HIV
+
+second_stage_HIV_Res4 <- feglm(HIV ~ predicted_Res_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Res4)
+
+second_stage_HIV_Rec4 <- feglm(HIV ~ predicted_Rec_Lag_4 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Rec4)
+
+
+second_stage_HIV_Res5 <- feglm(HIV ~ predicted_Res_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Res5)
+
+second_stage_HIV_Rec5 <- feglm(HIV ~ predicted_Rec_Lag_5 | Region + WeekofYear, family = poisson(link = "log"), cluster = ~ Region + WeekofYear, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Rec5)
+
+
+
+#Probably reporting results in tables and rewriting with a falsification interpretation
+
+##Tables and Reporting
+
+
+#Descriptive Statistics/Graphics
+
+#Regional Time Series
+
+#Renamings
+Tennessee_STI_Diagnoses4$Week <- Tennessee_STI_Diagnoses4$Sequential_Week
+
+Tennessee_STI_Diagnoses4$`Total STI Diagnoses` <- Tennessee_STI_Diagnoses4$AllSTI
+
+Tennessee_STI_Diagnoses4$`Total STI Diagnoses` <- Tennessee_STI_Diagnoses4$AllSTI
+
+#Adding Annual Population
+Tennessee_STI_Diagnoses5 <- Tennessee_STI_Diagnoses4 %>%
+  left_join(HealthRegionAnnualPopulations, by = "RegionYear")
+
+Tennessee_STI_Diagnoses5$`Health Region` <- Tennessee_STI_Diagnoses5$`Health Region.x`
+
+#Calculating Total STIS per 10k Residents
+
+Tennessee_STI_Diagnoses5$`Total STIs per 100K Residents` <- Tennessee_STI_Diagnoses5$`Total STI Diagnoses` / (Tennessee_STI_Diagnoses5$Population/100000)
+
+
+#Plotting by Region
+
+ggplot(data = Tennessee_STI_Diagnoses5, aes(x = Week, y = `Total STI Diagnoses`, color = `Health Region`)) + geom_line() + facet_wrap(facets = vars(`Health Region`))
+
+ggplot(data = Tennessee_STI_Diagnoses5, aes(x = Week, y = `Total STIs per 100K Residents`, color = `Health Region`)) + geom_line() + facet_wrap(facets = vars(`Health Region`))
+
+
+
+Summary_df_Tennessee_STI_Diagnoses <- Tennessee_STI_Diagnoses4[, c("Chlamydia", "Gonorrhea", "Syphilis", "HIV", "AllSTI")]
+
+
+install.packages('stargazer')
+library(stargazer)
+
+
+Summary_df_Tennessee_STI_Diagnoses[] <- lapply(Summary_df_Tennessee_STI_Diagnoses, function(x) if(is.factor(x) || is.character(x)) as.numeric(as.character(x)) else x)
+
+# Print the combined summary table
+stargazer(Summary_df_Tennessee_STI_Diagnoses, type="latex", summary = TRUE, title = "Average Weekly Diagnoses per Health Region: January 2018 - May 2023", out="summary_sti.tex")
+
+
+
+#Setting etable reporting options
+
+setFixest_dict(c(Stay_at_home_order = "Stay-at-Home Order", Weekly_Avg_Percent_Residential_Change = "Weekly Average Percent Change in Residential Time", Weekly_Avg_Percent_Retail_Recreation_Change = "Weekly Average Percent Change in Recreational/Retail Visitors", predicted_Res_Lag_4 = "L.4 Residential Time Percentage (Predicted)", predicted_Res_Lag_5 = "L.5 Residential Time Percentage (Predicted)", predicted_Rec_Lag_4 = "L.4 Recreational/Retail Visitor Percentage (Predicted)", predicted_Rec_Lag_5 = "L.5 Recreational/Retail Visitor Percentage (Predicted)"), Chlamydia = "Chlamydia", Gonorrhea = "Gonorrhea", Syphilis = "Syphilis", HIV = "HIV", Region = "Health Region", WeekofYear = "Week of Year")
+
+install.packages('pander')
+library(pander)
+
+my_style = style.df(depvar.title = "", fixef.title = "", 
+                    fixef.suffix = " fixed effect", yesNo = "yes")
+setFixest_etable(style.df = my_style, postprocess.df = pandoc.table.return)
+
+etable(first_stage_Res, first_stage_Rec, fitstat = ~ n + r2 + wr2 + wald , tex = TRUE)
+
+etable(second_stage_Chlamydia_Rec4, second_stage_Chlamydia_Rec5, second_stage_Gonorrhea_Rec4, second_stage_Gonorrhea_Rec5, second_stage_Syphilis_Rec4, second_stage_Syphilis_Rec5, second_stage_HIV_Rec4, second_stage_HIV_Rec5, tex = TRUE)
+
+etable(second_stage_Chlamydia_Res4, second_stage_Chlamydia_Res5, second_stage_Gonorrhea_Res4, second_stage_Gonorrhea_Res5, second_stage_Syphilis_Res4, second_stage_Syphilis_Res5, second_stage_HIV_Res4, second_stage_HIV_Res5, tex = TRUE)
+
+
+
+
+install.packages('kableExtra')
+install.packages('webshot2')
+install.packages('modelsummary')
+library(webshot2)
+library(kableExtra)
+library(modelsummary)
+
+Models_First_Stage <- list("Weekly Avg Percent Change in Time at Residences" = first_stage_Res, "Weekly Avg Percent Change in Retail/Recreation Location Visitors" = first_stage_Rec)
+
+cm2 = c('Stay_at_home_order' = 'Tennessee Stay-at-Home Order')
+
+options("modelsummary_format_numeric_latex" = "plain")
+
+modelsummary(Models_First_Stage, coef_rename = cm2, stars = TRUE, gof_omit = 'AIC|BIC|RMSE', output = "Models_First_Stage.tex")
+                         
+                         
+```
+
+
+```{r}
+
+#Using Splines to Control for Time as Robustness Measure
+
+install.packages('splines')
+library(splines)
+library(fixest)
+
+
+first_stage_Res_e <- feols(Weekly_Avg_Percent_Residential_Change ~ Stay_at_home_order + ns(Sequential_Week, df = 3) | Region, cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(first_stage_Res_e)
+etable(first_stage_Res_e)
+
+
+p_Diagnoses_with_Mobility$predicted_Res_e <- predict(first_stage_Res_e)
+
+first_stage_Rec_e <- feols(Weekly_Avg_Percent_Retail_Recreation_Change ~ Stay_at_home_order + ns(Sequential_Week, df = 3) | Region, cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(first_stage_Rec_e)
+etable(first_stage_Rec_e)
+
+p_Diagnoses_with_Mobility$predicted_Rec_e <- predict(first_stage_Rec_e)
+
+p_Diagnoses_with_Mobility$predicted_Rec_e_Lag_4 = lag_fml(predicted_Rec_e ~ Region + Sequential_Week, 4, p_Diagnoses_with_Mobility)
+
+p_Diagnoses_with_Mobility$predicted_Rec_e_Lag_5 = lag_fml(predicted_Rec_e ~ Region + Sequential_Week, 5, p_Diagnoses_with_Mobility)
+
+p_Diagnoses_with_Mobility$predicted_Res_e_Lag_4 = lag_fml(predicted_Res_e ~ Region + Sequential_Week, 4, p_Diagnoses_with_Mobility)
+
+p_Diagnoses_with_Mobility$predicted_Res_e_Lag_5 = lag_fml(predicted_Res_e ~ Region + Sequential_Week, 5, p_Diagnoses_with_Mobility)
+
+#Second Stage 4 and 5 Weeks Chlamydia
+
+second_stage_Chlamydia_Res_e_4 <- feglm(Chlamydia ~ predicted_Res_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Res_e_4)
+
+second_stage_Chlamydia_Rec_e_4 <- feglm(Chlamydia ~ predicted_Rec_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Rec_e_4)
+
+second_stage_Chlamydia_Res_e_5 <- feglm(Chlamydia ~ predicted_Res_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Res_e_5)
+
+second_stage_Chlamydia_Rec_e_5 <- feglm(Chlamydia ~ predicted_Rec_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Chlamydia_Rec_e_5)
+
+
+#Second Stage 4 and 5 Weeks Gonorrhea
+
+second_stage_Gonorrhea_Res_e_4 <- feglm(Gonorrhea ~ predicted_Res_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Res_e_4)
+
+second_stage_Gonorrhea_Rec_e_4 <- feglm(Gonorrhea ~ predicted_Rec_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Rec_e_4)
+
+second_stage_Gonorrhea_Res_e_5 <- feglm(Gonorrhea ~ predicted_Res_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Res_e_5)
+
+second_stage_Gonorrhea_Rec_e_5 <- feglm(Gonorrhea ~ predicted_Rec_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Gonorrhea_Rec_e_5)
+
+
+#Second Stage 4 and 5 Weeks Syphilis
+
+second_stage_Syphilis_Res_e_4 <- feglm(Syphilis ~ predicted_Res_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Res_e_4)
+
+second_stage_Syphilis_Rec_e_4 <- feglm(Syphilis ~ predicted_Rec_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Rec_e_4)
+
+second_stage_Syphilis_Res_e_5 <- feglm(Syphilis ~ predicted_Res_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Res_e_5)
+
+second_stage_Syphilis_Rec_e_5 <- feglm(Syphilis ~ predicted_Rec_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_Syphilis_Rec_e_5)
+
+#Second Stage 4 and 5 Weeks HIV
+
+second_stage_HIV_Res_e_4 <- feglm(HIV ~ predicted_Res_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Res_e_4)
+
+second_stage_HIV_Rec_e_4 <- feglm(HIV ~ predicted_Rec_e_Lag_4 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Rec_e_4)
+
+second_stage_HIV_Res_e_5 <- feglm(HIV ~ predicted_Res_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Res_e_5)
+
+second_stage_HIV_Rec_e_5 <- feglm(HIV ~ predicted_Rec_e_Lag_5 + ns(Sequential_Week, df = 3) | Region, family = poisson(link = "log"), cluster = ~ Region + Sequential_Week, data = p_Diagnoses_with_Mobility)
+
+summary(second_stage_HIV_Rec_e_5)
+
+
+
+
+#Robustness Regression Table Reporting
+
+setFixest_dict(c(Stay_at_home_order = "Stay-at-Home Order", Weekly_Avg_Percent_Residential_Change = "Weekly Average Percent Change in Residential Time", Weekly_Avg_Percent_Retail_Recreation_Change = "Weekly Average Percent Change in Recreational/Retail Visitors", predicted_Res_e_Lag_4 = "L.4 Residential Time Percentage (Predicted)", predicted_Res_e_Lag_5 = "L.5 Residential Time Percentage (Predicted)", predicted_Rec_e_Lag_4 = "L.4 Recreational/Retail Visitor Percentage (Predicted)", predicted_Rec_e_Lag_5 = "L.5 Recreational/Retail Visitor Percentage (Predicted)"), Chlamydia = "Chlamydia", Gonorrhea = "Gonorrhea", Syphilis = "Syphilis", HIV = "HIV", Region = "Health Region", Sequential_Week = "Week", `ns(Sequential_Week, df = 3)1` = "Natural Spline 1", `ns(Sequential_Week, df = 3)2` = "Natural Spline 2", `ns(Sequential_Week, df = 3)3` = "Natural Spline 3")
+
+
+library(pander)
+
+my_style = style.df(depvar.title = "", fixef.title = "", 
+                    fixef.suffix = " fixed effect", yesNo = "yes")
+setFixest_etable(style.df = my_style, postprocess.df = pandoc.table.return)
+
+etable(first_stage_Res_e, first_stage_Rec_e, fitstat = ~ n + r2 + wr2 + wald, tex = TRUE)
+
+etable(second_stage_Chlamydia_Rec_e_4, second_stage_Chlamydia_Rec_e_5, second_stage_Gonorrhea_Rec_e_4, second_stage_Gonorrhea_Rec_e_5, second_stage_Syphilis_Rec_e_4, second_stage_Syphilis_Rec_e_5, second_stage_HIV_Rec_e_4, second_stage_HIV_Rec_e_5, tex = TRUE)
+
+etable(second_stage_Chlamydia_Res_e_4, second_stage_Chlamydia_Res_e_5, second_stage_Gonorrhea_Res_e_4, second_stage_Gonorrhea_Res_e_5, second_stage_Syphilis_Res_e_4, second_stage_Syphilis_Res_e_5, second_stage_HIV_Res_e_4, second_stage_HIV_Res_e_5, tex = TRUE)
+
+```
